@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 from math import hypot, sqrt
 from typing import List, Tuple
 import numpy as np
+import time
 
 
 class Triangle:
@@ -16,6 +17,9 @@ class Triangle:
         self.edges = [tuple(sorted((v1, v2))), tuple(sorted((v2, v3))), tuple(sorted((v3, v1)))]
 
     def inCircle(self, p : List[Tuple[int, int]]):
+        if self.circumcircle is None: # check added for when D is None
+            return False
+        
         px, py = p
         center_x = self.circumcircle[0][0]
         center_y = self.circumcircle[0][1] 
@@ -102,7 +106,7 @@ def generate_points(width : int, height : int, num_points : int, method : str):
     return points 
 
 
-def plot_triangulation(triangulation, show_circumcircle=True, show_points=True):
+def plot_triangulation(triangulation, show_circumcircle=False, show_points=True):
     fig, ax = plt.subplots(figsize=(8, 8))
     
     triangle_verts = []
@@ -116,36 +120,34 @@ def plot_triangulation(triangulation, show_circumcircle=True, show_points=True):
         
         if show_circumcircle:
             (center_x, center_y), radius = t.getCircle()
-            
             circle = patches.Circle((center_x, center_y), radius, 
                                     fill=False, edgecolor='red', 
                                     linestyle='--', alpha=0.3, linewidth=0.8)
             circle_patches.append(circle)
 
-            # add circumcircles
-            patch_coll = PatchCollection(circle_patches, match_original=True, zorder=2)
-            ax.add_collection(patch_coll)
-
-        if show_points:
-            # add points
-            pts = np.array(all_points)
-            unique_pts = np.unique(pts, axis=0)
-            ax.scatter(unique_pts[:, 0], unique_pts[:, 1], color='black', s=20, zorder=3)
-
-    # add triangle faces and edges 
+    # add triangle faces and edges
     poly_coll = PolyCollection(triangle_verts, facecolors='skyblue', 
                                edgecolors='black', alpha=0.4, zorder=1)
     ax.add_collection(poly_coll)
 
-    # formatting
+    # add circumcircles
+    if show_circumcircle and circle_patches:
+        patch_coll = PatchCollection(circle_patches, match_original=True, zorder=2)
+        ax.add_collection(patch_coll)
+
+    # add points
+    if show_points:
+        pts = np.array(all_points)
+        unique_pts = np.unique(pts, axis=0)
+        ax.scatter(unique_pts[:, 0], unique_pts[:, 1], color='black', s=20, zorder=3)
+
     ax.set_aspect('equal')
     ax.autoscale_view()
-    plt.grid(True, linestyle=':', alpha=0.5)
-    plt.title("Triangulation with Circumcircles")
+    plt.title("Delaunay Triangulation")
     plt.show()
 
 
-def delaunay_triangulation(width : int, height : int, num_points : int, point_gen_method="uniform", plot=False):
+def delaunay_triangulation(width : int, height : int, num_points : int, point_gen_method="uniform", plot=False, **plot_kwargs):
     triangulation = []
     points = generate_points(width, height, num_points, point_gen_method)
     
@@ -160,7 +162,7 @@ def delaunay_triangulation(width : int, height : int, num_points : int, point_ge
     for vertex in points:
         bad_triangles = set()
         
-        # final all invalid triangles
+        # find all invalid triangles
         for triangle in triangulation:
             if triangle.inCircle(vertex):
                 bad_triangles.add(triangle)
@@ -199,8 +201,8 @@ def delaunay_triangulation(width : int, height : int, num_points : int, point_ge
 
     triangulation = list(set(triangulation) - set(remove))
 
-    # visualize
+    # visualize and also violate SOLID
     if plot:
-        plot_triangulation(triangulation, show_circumcircle=False)
-    
+        plot_triangulation(triangulation, **plot_kwargs)
+
     return triangulation
