@@ -1,11 +1,11 @@
-from random import randint
+from random import choice, randint, uniform
 import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection, PatchCollection
 import matplotlib.patches as patches
+import matplotlib.cm as cm
 from math import hypot, sqrt
 from typing import List, Tuple
 import numpy as np
-import time
 
 
 class Triangle:
@@ -14,7 +14,9 @@ class Triangle:
         self.v2 = v2
         self.v3 = v3
         self.circumcircle = self.calc_circumcircle(v1, v2, v3)
-        self.edges = [tuple(sorted((v1, v2))), tuple(sorted((v2, v3))), tuple(sorted((v3, v1)))]
+        self.edges = [tuple(sorted((self.v1,self.v2))), 
+                      tuple(sorted((self.v2, self.v3))), 
+                      tuple(sorted((self.v3, self.v1)))]
 
     def inCircle(self, p : List[Tuple[int, int]]):
         if self.circumcircle is None: # check added for when D is None
@@ -102,12 +104,13 @@ def generate_points(width : int, height : int, num_points : int, method : str):
 
     #print(f"Test Case 1: {[(15, 161), (136, 172), (155, 170)]}") -> Near degenerate triangle (Do colinearity check)
     #print(f"Test Case 2: {[(0,0), (1,1), (2,2)]}")
-
+    wfc_points = [(21, 184), (21, 184), (479, 288), (435, 13), (136, 468), (251, 98), (330, 364), (15, 387), (82, 26), (201, 249), (350, 190), (434, 379), (185, 363), (295, 495), (355, 45), (60, 287)]
     return points 
 
 
 def plot_triangulation(triangulation, show_circumcircle=False, show_points=True):
     fig, ax = plt.subplots(figsize=(8, 8))
+    colormap = cm.get_cmap('RdPu')
     
     triangle_verts = []
     circle_patches = []
@@ -124,10 +127,15 @@ def plot_triangulation(triangulation, show_circumcircle=False, show_points=True)
                                     fill=False, edgecolor='red', 
                                     linestyle='--', alpha=0.3, linewidth=0.8)
             circle_patches.append(circle)
+        
+        face_colors = [colormap(uniform(0.3, 0.7)) for _ in range(len(triangle_verts))]
 
     # add triangle faces and edges
-    poly_coll = PolyCollection(triangle_verts, facecolors='skyblue', 
-                               edgecolors='black', alpha=0.4, zorder=1)
+    poly_coll = PolyCollection(triangle_verts, 
+                               facecolors=face_colors, 
+                               edgecolors='white', 
+                               alpha=0.5, 
+                               zorder=1)
     ax.add_collection(poly_coll)
 
     # add circumcircles
@@ -143,7 +151,8 @@ def plot_triangulation(triangulation, show_circumcircle=False, show_points=True)
 
     ax.set_aspect('equal')
     ax.autoscale_view()
-    plt.title("Delaunay Triangulation")
+    #plt.title("Delaunay Triangulation")
+    plt.axis('off')
     plt.show()
 
 
