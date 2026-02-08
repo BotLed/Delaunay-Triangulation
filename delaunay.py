@@ -153,6 +153,7 @@ def plot_triangulation(triangulation, show_circumcircle=False, show_points=True)
     ax.autoscale_view()
     #plt.title("Delaunay Triangulation")
     plt.axis('off')
+    plt.savefig('transparent_plot.png', transparent=True, dpi=300)
     plt.show()
 
 
